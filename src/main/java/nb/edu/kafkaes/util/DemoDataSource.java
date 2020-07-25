@@ -1,4 +1,4 @@
-package nb.edu.kafkaes.sql;
+package nb.edu.kafkaes.util;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -15,8 +15,8 @@ public class DemoDataSource {
         config.setUsername("appdev");
         config.setPassword("appdev");
         config.setAutoCommit(false);
-        config.setMaximumPoolSize(3);
-        config.setMinimumIdle(2);
+        config.setMaximumPoolSize(5);
+        config.setMinimumIdle(4);
         config.setIdleTimeout(300000L);
         ds = new HikariDataSource(config);
     }

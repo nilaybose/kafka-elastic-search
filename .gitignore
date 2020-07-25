@@ -5,3 +5,4 @@ output/
 .settings/
 build/
 out/
+.idea

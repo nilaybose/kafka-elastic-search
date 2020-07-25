@@ -1,8 +1,10 @@
 package nb.edu.kafkaes.sql;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nb.edu.kafkaes.kafka.KafkaUtilities;
-import nb.edu.kafkaes.vo.KafkaOrderRecord;
+import com.google.common.annotations.VisibleForTesting;
+import nb.edu.kafkaes.util.DemoDataSource;
+import nb.edu.kafkaes.util.KafkaUtilities;
+import nb.edu.kafkaes.vo.OrderRecord;
 import org.apache.kafka.clients.producer.Producer;
 
 import java.sql.Connection;
@@ -10,20 +12,40 @@ import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class OrderDataLoader {
-    private static Producer<String, String> producer;
-    private static ObjectMapper mapper = new ObjectMapper();
+public class ActiveOrderDataLoader implements Runnable {
+    private Producer<String, String> producer;
+    private ObjectMapper mapper = new ObjectMapper();
+    private AtomicBoolean shutdown = new AtomicBoolean(false);
 
-    public static void produceOrders() throws Exception {
+    public ActiveOrderDataLoader() {
+    }
+
+    @Override
+    public void run() {
         //Only one instance of kafka producer must be created
         //it is thread safe
         //We can create the active-order topic as "kafka-topics.sh --create --zookeeper 127.0.0.1:2181 --partitions 3 --replication-factor 1 --topic active-orders"
         producer = KafkaUtilities.getProducer();
-        createOrder("a44d3eb4-24ec-42e3-bec6-454165592515");
+        while (!shutdown.get()) {
+            try {
+                String order = createOrder("a44d3eb4-24ec-42e3-bec6-454165592515");
+                System.out.println("Created Order - " + order);
+                Thread.sleep(2000L);
+            } catch (Exception ex) {
+                System.out.println("Exception in OrderDataLoader - " + ex.getMessage());
+                try {
+                    Thread.sleep(3000L);
+                } catch (Exception ignore) {
+                    //ignore
+                }
+            }
+        }
     }
 
-    public static void loadCustomer() throws Exception {
+    @VisibleForTesting
+    void loadCustomer() throws Exception {
         String sql = "INSERT INTO kafka.customers (ID,address,region,name) VALUES (?, ?, ?, ? );";
         try (Connection conn = DemoDataSource.getConnection();
              PreparedStatement ps = conn.prepareCall(sql)) {
@@ -36,7 +58,8 @@ public class OrderDataLoader {
         }
     }
 
-    private static String createOrder(String customer) throws Exception {
+    @VisibleForTesting
+    String createOrder(String customer) throws Exception {
         String order = "INSERT INTO kafka.orders(ID,cust_id,total,ts_placed, description) VALUES (?, ?, ?, ?, ?)";
         String odrProducts = "INSERT INTO kafka.orders_products (ID,order_id,product_id) VALUES (?, ?, ?)";
         String orderId = UUID.randomUUID().toString();
@@ -73,13 +96,19 @@ public class OrderDataLoader {
                 conn.commit();
                 //kafka produce must happen after db commit
                 KafkaUtilities.sendToTopic(producer, "active-orders", orderId,
-                        mapper.writeValueAsString(new KafkaOrderRecord(orderId, "INSERT")));
+                        mapper.writeValueAsString(new OrderRecord(orderId, "INSERT")), false);
 
             } catch (Exception ex) {
                 conn.rollback();
             }
         }
         return orderId;
+    }
+
+    public void shutdown() {
+        shutdown.set(true);
+        producer.flush();
+        producer.close();
     }
 }
 
