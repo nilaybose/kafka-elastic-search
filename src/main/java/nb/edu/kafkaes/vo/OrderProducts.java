@@ -8,6 +8,9 @@ public class OrderProducts {
     private String orderId;
     private String productId;
 
+    public OrderProducts() {
+    }
+
     public OrderProducts(String id, String orderId, String productId) {
         this.id = id;
         this.orderId = orderId;
