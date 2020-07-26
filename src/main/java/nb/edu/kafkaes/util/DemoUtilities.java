@@ -42,14 +42,14 @@ public class DemoUtilities {
         return consumer;
     }
 
-    public static RestHighLevelClient getEsClient(){
+    public static RestHighLevelClient getEsClient() {
         return new RestHighLevelClient(
                 RestClient.builder(
                         new HttpHost("localhost", 9200, "http")));
     }
 
     public static void sendToTopic(Producer<String, String> producer,
-                                   final String topic, String key, String value, boolean sync) throws Exception{
+                                   final String topic, String key, String value, boolean sync) throws Exception {
         Callback callback = (metadata, exception) -> {
             if (exception == null) {
                 System.out.println(String.format("Published record to kafka topic [%s], partition [%d], offset [%d]",
@@ -65,7 +65,7 @@ public class DemoUtilities {
                 = producer.send(
                 new ProducerRecord<>(topic, key, value),
                 callback);
-        if(sync){
+        if (sync) {
             meta.get();
         }
         producer.flush();

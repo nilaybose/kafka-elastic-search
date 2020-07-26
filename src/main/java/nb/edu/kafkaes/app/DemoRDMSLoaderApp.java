@@ -1,10 +1,10 @@
 package nb.edu.kafkaes.app;
 
-import nb.edu.kafkaes.sql.ActiveOrderDataLoader;
+import nb.edu.kafkaes.sql.OrderDataLoader;
 
 public class DemoRDMSLoaderApp {
     public static void main(String[] args) {
-        ActiveOrderDataLoader dataLoader = new ActiveOrderDataLoader();
+        OrderDataLoader dataLoader = new OrderDataLoader();
         new Thread(dataLoader).start();
 
         Runtime.getRuntime().

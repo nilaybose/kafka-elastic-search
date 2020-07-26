@@ -12,7 +12,7 @@ public class CustomerRecord {
     public CustomerRecord() {
     }
 
-    public CustomerRecord(String id, String address, String region, String name){
+    public CustomerRecord(String id, String address, String region, String name) {
         this.id = id;
         this.address = address;
         this.name = name;

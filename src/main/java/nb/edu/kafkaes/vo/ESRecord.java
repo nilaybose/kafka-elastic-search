@@ -10,7 +10,8 @@ public class ESRecord {
     private CustomerRecord customer;
     private List<OrderProducts> products;
 
-    public ESRecord(){}
+    public ESRecord() {
+    }
 
     public ESRecord(OrderRecord order, CustomerRecord customer, List<OrderProducts> products) {
         this.order = order;
