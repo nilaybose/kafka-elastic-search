@@ -32,7 +32,7 @@ public class ESDataGenerator {
 
     public void init() {
         producer = DemoUtilities.getProducer();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
             service.submit(getActiveOrderConsumer(String.valueOf(i)));
         }
     }
@@ -94,7 +94,7 @@ public class ESDataGenerator {
                             rs.getString(2),
                             rs.getString(3),
                             rs.getString(4),
-                            rs.getString(5) + "_reprocessed");
+                            rs.getString(5));
                 }
             }
         }
