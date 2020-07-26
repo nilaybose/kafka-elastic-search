@@ -22,7 +22,7 @@ CREATE TABLE demo.orders
     id text COLLATE pg_catalog."default" NOT NULL,
     cust_id text COLLATE pg_catalog."default",
     total text COLLATE pg_catalog."default",
-    ts_placed timestamp without time zone,
+    ts_placed timestamp without time zone NOT NULL,
     description text COLLATE pg_catalog."default",
     CONSTRAINT orders_pkey PRIMARY KEY (id)
 )

@@ -28,7 +28,7 @@ public class OrderDataLoader implements Runnable {
         //it is thread safe
         //We can create the active-order topic as "kafka-topics.sh --create --zookeeper 127.0.0.1:2181 --partitions 3 --replication-factor 1 --topic active-orders"
         producer = DemoUtilities.getProducer();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 3; i++) {
             try {
                 String order = createOrder("a44d3eb4-24ec-42e3-bec6-454165592515");
                 System.out.println("Created Order - " + order);
