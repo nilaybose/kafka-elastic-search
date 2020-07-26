@@ -28,11 +28,11 @@ public class ActiveOrderDataLoader implements Runnable {
         //it is thread safe
         //We can create the active-order topic as "kafka-topics.sh --create --zookeeper 127.0.0.1:2181 --partitions 3 --replication-factor 1 --topic active-orders"
         producer = DemoUtilities.getProducer();
-        while (!shutdown.get()) {
+        for(int i = 0 ; i < 10 ; i++){
             try {
-                String order = createOrder("a44d3eb4-24ec-42e3-bec6-454165592515");
-                System.out.println("Created Order - " + order);
-                Thread.sleep(3000000L);
+                    String order = createOrder("a44d3eb4-24ec-42e3-bec6-454165592515");
+                    System.out.println("Created Order - " + order);
+                    Thread.sleep(2000L);
             } catch (Exception ex) {
                 System.out.println("Exception in OrderDataLoader - " + ex.getMessage());
                 try {
@@ -42,11 +42,12 @@ public class ActiveOrderDataLoader implements Runnable {
                 }
             }
         }
+        shutdown();
     }
 
     @VisibleForTesting
     void loadCustomer() throws Exception {
-        String sql = "INSERT INTO kafka.customers (ID,address,region,name) VALUES (?, ?, ?, ? );";
+        String sql = "INSERT INTO demo.customers (ID,address,region,name) VALUES (?, ?, ?, ? );";
         try (Connection conn = DemoDataSource.getConnection();
              PreparedStatement ps = conn.prepareCall(sql)) {
             ps.setObject(1, UUID.randomUUID());
@@ -60,8 +61,8 @@ public class ActiveOrderDataLoader implements Runnable {
 
     @VisibleForTesting
     String createOrder(String customer) throws Exception {
-        String order = "INSERT INTO kafka.orders(ID,cust_id,total,ts_placed, description) VALUES (?, ?, ?, ?, ?)";
-        String odrProducts = "INSERT INTO kafka.orders_products (ID,order_id,product_id) VALUES (?, ?, ?)";
+        String order = "INSERT INTO demo.orders(ID,cust_id,total,ts_placed, description) VALUES (?, ?, ?, ?, ?)";
+        String odrProducts = "INSERT INTO demo.orders_products (ID,order_id,product_id) VALUES (?, ?, ?)";
         String orderId = UUID.randomUUID().toString();
         try (Connection conn = DemoDataSource.getConnection();
              PreparedStatement psOrders = conn.prepareCall(order);
@@ -99,6 +100,7 @@ public class ActiveOrderDataLoader implements Runnable {
                         mapper.writeValueAsString(new OrderRecord(orderId, "INSERT")), false);
 
             } catch (Exception ex) {
+                System.out.println("Active Order Data Loader Exception - " + ex.getMessage());
                 conn.rollback();
             }
         }

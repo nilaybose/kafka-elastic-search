@@ -1,0 +1,57 @@
+CREATE SCHEMA demo
+    AUTHORIZATION postgres;
+
+CREATE TABLE demo.customers
+(
+    id text COLLATE pg_catalog."default" NOT NULL,
+    address text COLLATE pg_catalog."default" NOT NULL,
+    region text COLLATE pg_catalog."default" NOT NULL,
+    name text COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT customer_pkey PRIMARY KEY (id)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE demo.customers
+    OWNER to postgres;
+
+CREATE TABLE demo.orders
+(
+    id text COLLATE pg_catalog."default" NOT NULL,
+    cust_id text COLLATE pg_catalog."default",
+    total text COLLATE pg_catalog."default",
+    ts_placed timestamp without time zone,
+    description text COLLATE pg_catalog."default",
+    CONSTRAINT orders_pkey PRIMARY KEY (id)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE demo.orders
+    OWNER to postgres;
+
+CREATE TABLE demo.orders_products
+(
+    id text COLLATE pg_catalog."default" NOT NULL,
+    order_id text COLLATE pg_catalog."default" NOT NULL,
+    product_id text COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT order_products_pkey PRIMARY KEY (id)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE demo.orders_products
+    OWNER to postgres;
+
+INSERT INTO demo.customers(
+	id, address, region, name)
+	VALUES ('a44d3eb4-24ec-42e3-bec6-454165592515', 'KA India', 'India', 'John Lewis');
+commit;
+
+

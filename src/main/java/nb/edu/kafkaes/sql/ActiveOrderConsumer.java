@@ -38,7 +38,8 @@ public class ActiveOrderConsumer implements Runnable {
     @Override
     public void run() {
         KafkaConsumer<String, String> consumer
-                = DemoUtilities.getConsumer(id, "order-group", "active-orders");
+                = DemoUtilities.getConsumer(id,
+                System.getProperty("active-orders-group","order-group"), "active-orders");
         while (!shutdown.get()) {
             try {
                 //Poll and read from kafka topic
@@ -80,7 +81,7 @@ public class ActiveOrderConsumer implements Runnable {
 
     OrderRecord getOrderRecord(Connection conn, String orderId) throws Exception {
         OrderRecord record = null;
-        String orderSql = "Select id, cust_id, total, ts_placed, description from kafka.orders where id = ?";
+        String orderSql = "Select id, cust_id, total, ts_placed, description from demo.orders where id = ?";
         try (PreparedStatement ps = conn.prepareCall(orderSql)) {
             ps.setString(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -100,7 +101,7 @@ public class ActiveOrderConsumer implements Runnable {
     @VisibleForTesting
     CustomerRecord getCustomerRecord(Connection conn, String customerId) throws Exception {
         CustomerRecord record = null;
-        String orderSql = "select id, address, region, name from kafka.customers where id = ?";
+        String orderSql = "select id, address, region, name from demo.customers where id = ?";
         try (PreparedStatement ps = conn.prepareCall(orderSql)) {
             ps.setString(1, customerId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -120,7 +121,7 @@ public class ActiveOrderConsumer implements Runnable {
     List<OrderProducts> getOrderProducts(Connection conn, String orderId) throws Exception {
         OrderProducts record;
         List<OrderProducts> products = new ArrayList<>();
-        String orderSql = "select id, product_id from kafka.orders_products where order_id = ?";
+        String orderSql = "select id, product_id from demo.orders_products where order_id = ?";
         try (PreparedStatement ps = conn.prepareCall(orderSql)) {
             ps.setString(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
