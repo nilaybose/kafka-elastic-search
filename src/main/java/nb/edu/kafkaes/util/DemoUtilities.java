@@ -1,14 +1,17 @@
 package nb.edu.kafkaes.util;
 
+import org.apache.http.HttpHost;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.*;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.Future;
 
-public class KafkaUtilities {
+public class DemoUtilities {
     public static Producer<String, String> getProducer() {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
@@ -37,6 +40,12 @@ public class KafkaUtilities {
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(topic));
         return consumer;
+    }
+
+    public static RestHighLevelClient getEsClient(){
+        return new RestHighLevelClient(
+                RestClient.builder(
+                        new HttpHost("localhost", 9200, "http")));
     }
 
     public static void sendToTopic(Producer<String, String> producer,

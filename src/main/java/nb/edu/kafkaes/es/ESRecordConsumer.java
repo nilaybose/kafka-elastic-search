@@ -1,48 +1,52 @@
 package nb.edu.kafkaes.es;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import nb.edu.kafkaes.util.DemoDataSource;
-import nb.edu.kafkaes.util.KafkaUtilities;
-import nb.edu.kafkaes.vo.CustomerRecord;
-import nb.edu.kafkaes.vo.ESRecord;
-import nb.edu.kafkaes.vo.OrderProducts;
-import nb.edu.kafkaes.vo.OrderRecord;
+import nb.edu.kafkaes.util.DemoUtilities;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.Producer;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ESRecordConsumer implements Runnable {
     private ObjectMapper mapper = new ObjectMapper();
     private AtomicBoolean shutdown;
+    private RestHighLevelClient client;
     private String id;
 
     public ESRecordConsumer(String id,
-                            AtomicBoolean shutdown) {
+                            AtomicBoolean shutdown,
+                            RestHighLevelClient client) {
         this.id = id;
         this.shutdown = shutdown;
+        this.client = client;
     }
 
     @Override
     public void run() {
         KafkaConsumer<String, String> consumer
-                = KafkaUtilities.getConsumer(id, "esgroup4", "active-orders-es");
+                = DemoUtilities.getConsumer(id, "es-group", "active-orders-es");
         while (!shutdown.get()) {
             try {
                 //Poll and read from kafka topic
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
                 if (!records.isEmpty()) {
                     for (ConsumerRecord<String, String> record : records) {
-                        System.out.printf("ES record consumer [%s], offset [%d], value [%s]\n", id, record.offset(), record.value());
+                        IndexRequest indexRequest = new IndexRequest("orders")
+                                .id(record.key())
+                                .source(record.value(), XContentType.JSON);
+
+                        UpdateRequest updateRequest = new UpdateRequest("orders", record.key())
+                                .doc(record.value(), XContentType.JSON)
+                                .upsert(indexRequest);
+                        client.update(updateRequest, RequestOptions.DEFAULT).getId();
+                        System.out.printf("ESRecordConsumer [%s]: indexed id [%s]\n", id, record.key());
                     }
                     consumer.commitSync();
                 }
@@ -55,5 +59,6 @@ public class ESRecordConsumer implements Runnable {
                 }
             }
         }
+        consumer.close();
     }
 }

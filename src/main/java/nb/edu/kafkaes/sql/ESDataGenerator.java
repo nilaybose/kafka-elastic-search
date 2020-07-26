@@ -1,7 +1,7 @@
 package nb.edu.kafkaes.sql;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nb.edu.kafkaes.util.KafkaUtilities;
+import nb.edu.kafkaes.util.DemoUtilities;
 import org.apache.kafka.clients.producer.Producer;
 
 import java.util.concurrent.ExecutorService;
@@ -16,7 +16,7 @@ public class ESDataGenerator {
     private ExecutorService service =  Executors.newFixedThreadPool(3);
 
     public void init() {
-        producer = KafkaUtilities.getProducer();
+        producer = DemoUtilities.getProducer();
         for(int i = 0; i < 3; i++){
             service.submit(new ActiveOrderConsumer(String.valueOf(i), producer, shutdown));
         }

@@ -3,7 +3,7 @@ package nb.edu.kafkaes.sql;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import nb.edu.kafkaes.util.DemoDataSource;
-import nb.edu.kafkaes.util.KafkaUtilities;
+import nb.edu.kafkaes.util.DemoUtilities;
 import nb.edu.kafkaes.vo.CustomerRecord;
 import nb.edu.kafkaes.vo.ESRecord;
 import nb.edu.kafkaes.vo.OrderProducts;
@@ -38,7 +38,7 @@ public class ActiveOrderConsumer implements Runnable {
     @Override
     public void run() {
         KafkaConsumer<String, String> consumer
-                = KafkaUtilities.getConsumer(id, "order.group", "active-orders");
+                = DemoUtilities.getConsumer(id, "order-group", "active-orders");
         while (!shutdown.get()) {
             try {
                 //Poll and read from kafka topic
@@ -57,15 +57,15 @@ public class ActiveOrderConsumer implements Runnable {
                                 ESRecord esRecord = new ESRecord(orderRecord, customerRecord, products);
 
                                 //Write to elastic search topic
-                                KafkaUtilities.sendToTopic(producer,
+                                DemoUtilities.sendToTopic(producer,
                                         "active-orders-es",
                                         kafkaOrder.getOrderId(),
                                         mapper.writeValueAsString(esRecord), true);
                             }
                         }
                     }
+                    consumer.commitSync();
                 }
-                consumer.commitSync();
             } catch (Exception ex) {
                 System.out.println("Exception in ActiveOrderConsumer - " + ex.getMessage());
                 try {
@@ -75,6 +75,7 @@ public class ActiveOrderConsumer implements Runnable {
                 }
             }
         }
+        consumer.close();
     }
 
     OrderRecord getOrderRecord(Connection conn, String orderId) throws Exception {

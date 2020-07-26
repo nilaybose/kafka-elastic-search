@@ -3,7 +3,7 @@ package nb.edu.kafkaes.sql;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import nb.edu.kafkaes.util.DemoDataSource;
-import nb.edu.kafkaes.util.KafkaUtilities;
+import nb.edu.kafkaes.util.DemoUtilities;
 import nb.edu.kafkaes.vo.OrderRecord;
 import org.apache.kafka.clients.producer.Producer;
 
@@ -27,12 +27,12 @@ public class ActiveOrderDataLoader implements Runnable {
         //Only one instance of kafka producer must be created
         //it is thread safe
         //We can create the active-order topic as "kafka-topics.sh --create --zookeeper 127.0.0.1:2181 --partitions 3 --replication-factor 1 --topic active-orders"
-        producer = KafkaUtilities.getProducer();
+        producer = DemoUtilities.getProducer();
         while (!shutdown.get()) {
             try {
                 String order = createOrder("a44d3eb4-24ec-42e3-bec6-454165592515");
                 System.out.println("Created Order - " + order);
-                Thread.sleep(2000L);
+                Thread.sleep(3000000L);
             } catch (Exception ex) {
                 System.out.println("Exception in OrderDataLoader - " + ex.getMessage());
                 try {
@@ -95,7 +95,7 @@ public class ActiveOrderDataLoader implements Runnable {
                 psItems.executeBatch();
                 conn.commit();
                 //kafka produce must happen after db commit
-                KafkaUtilities.sendToTopic(producer, "active-orders", orderId,
+                DemoUtilities.sendToTopic(producer, "active-orders", orderId,
                         mapper.writeValueAsString(new OrderRecord(orderId, "INSERT")), false);
 
             } catch (Exception ex) {
