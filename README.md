@@ -1,7 +1,11 @@
 # kafka-elastic-search
-Pull data from rdbms and push data to es using kafka topic
+Pull data from rdbms and push data to es using kafka topics/ connect
 
-![Approach](approach.jpg)
+####Custom kafka consumer
+![Approach - 1](approach1.jpg)
+
+####Using kafka connect
+![Approach - 2](approach2.jpg)
 
 ###Kafka Connect JDBC
 cd ./connect
