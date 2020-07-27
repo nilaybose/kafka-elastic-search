@@ -1,7 +1,8 @@
-package nb.edu.kafkaes.sql;
+package nb.edu.kafkaes.connect;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.Gson;
 import nb.edu.kafkaes.util.DemoDataSource;
 import nb.edu.kafkaes.util.DemoUtilities;
 import nb.edu.kafkaes.vo.CustomerRecord;
@@ -24,11 +25,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ESDataGenerator {
+public class ConnectESDataGenerator {
     private Producer<String, String> producer;
     private final ObjectMapper mapper = new ObjectMapper();
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private final ExecutorService service = Executors.newFixedThreadPool(3);
+    private final Gson gson = new Gson();
 
     public void init() {
         producer = DemoUtilities.getProducer();
@@ -41,7 +43,7 @@ public class ESDataGenerator {
         return () -> {
             KafkaConsumer<String, String> consumer
                     = DemoUtilities.getConsumer(id,
-                    System.getProperty("active-orders-group", "order-group"), "active-orders");
+                    System.getProperty("active-orders-group", "connect-order-group"), "connect-active-orders");
             while (!shutdown.get()) {
                 try {
                     //Poll and read from kafka topic
@@ -51,22 +53,23 @@ public class ESDataGenerator {
                             for (ConsumerRecord<String, String> record : records) {
                                 try {
                                     //Read the kafka json as Order
-                                    OrderRecord kafkaOrder = mapper.readValue(record.value(), OrderRecord.class);
+                                    OrderValue kafkaOrder = gson.fromJson(record.value(), OrderValue.class);
 
                                     //Read data base to generate the elastic search document
-                                    OrderRecord orderRecord = getOrderRecord(conn, kafkaOrder.getOrderId());
+                                    OrderRecord orderRecord = getOrderRecord(conn, kafkaOrder.getId());
                                     if (orderRecord != null) {
                                         CustomerRecord customerRecord = getCustomerRecord(conn, orderRecord.getCustId());
-                                        List<OrderProducts> products = getOrderProducts(conn, kafkaOrder.getOrderId());
+                                        List<OrderProducts> products = getOrderProducts(conn, kafkaOrder.getId());
                                         ESRecord esRecord = new ESRecord(orderRecord, customerRecord, products);
 
                                         //Write to elastic search topic
                                         DemoUtilities.sendToTopic(producer,
-                                                "active-orders-es",
-                                                kafkaOrder.getOrderId(),
+                                                "connect-active-orders-es",
+                                                kafkaOrder.getId(),
                                                 mapper.writeValueAsString(esRecord), true);
                                     }
-                                } catch (Exception msgException) {
+                                }
+                                catch(Exception msgException){
                                     System.out.printf("Exception in ActiveOrderConsumer parsing msg [%s], ex [%s]\n", record.value(), msgException.getMessage());
                                 }
                             }

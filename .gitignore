@@ -6,3 +6,4 @@ output/
 build/
 out/
 .idea
+*.offsets

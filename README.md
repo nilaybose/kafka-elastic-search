@@ -5,4 +5,4 @@ Pull data from rdbms and push data to es using kafka topic
 
 ###Kafka Connect JDBC
 cd ./connect
-connect-standalone.sh ./connect/worker.properties ./connect/db.properties
+alias kconnect='${PATH_2_KAFKA}/bin/connect-standalone.sh ./worker.properties ./connect.properties'
