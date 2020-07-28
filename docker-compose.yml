@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   # this is our kafka cluster.
-  kafka-cluster:
+  kafka:
     image: landoop/fast-data-dev
     environment:
       ADV_HOST: 127.0.0.1         # Change to 192.168.99.100 if using Docker Toolbox
@@ -28,7 +28,7 @@ services:
 
   # we will use elasticsearch as one of our sinks.
   # This configuration allows you to start elasticsearch
-  elasticsearch:
+  es:
     image: elasticsearch:7.8.0
     environment:
       discovery.type: single-node
